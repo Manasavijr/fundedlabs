@@ -1,0 +1,80 @@
+{
+  "experiment": "E6",
+  "config": "like",
+  "when": "2026-11-11T15:39:28",
+  "query": "SELECT f.fiscal_year, g.code AS agency, COUNT(DISTINCT a.award_id) AS awards, SUM(f.amount) AS funding\nFROM award a\nJOIN award_funding f ON f.award_id = a.award_id\nJOIN agency g        ON g.agency_id = a.agency_id\nWHERE (a.title LIKE CONCAT('%', @topic, '%') OR a.abstract LIKE CONCAT('%', @topic, '%'))\n  AND f.fiscal_year BETWEEN 2016 AND 2026\nGROUP BY f.fiscal_year, g.code\nORDER BY f.fiscal_year, g.code",
+  "indexes_added": [],
+  "index_build_ms": {},
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ]
+  },
+  "explain_tree": "-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)\n    -> Sort: f.fiscal_year, g.`code`\n        -> Stream results  (cost=191485 rows=4410)\n            -> Nested loop inner join  (cost=191485 rows=4410)\n                -> Inner hash join (no condition)  (cost=96440 rows=21016)\n                    -> Filter: (f.fiscal_year between 2016 and 2026)  (cost=43491 rows=94583)\n                        -> Table scan on f  (cost=43491 rows=851329)\n                    -> Hash\n                        -> Covering index scan on g using uq_agency_code  (cost=1.2 rows=2)\n                -> Filter: ((a.agency_id = g.agency_id) and ((a.title like <cache>(concat('%',(@topic),'%'))) or (a.abstract like <cache>(concat('%',(@topic),'%')))))  (cost=0.491 rows=0.21)\n                    -> Single-row index lookup on a using PRIMARY (award_id = f.award_id)  (cost=0.491 rows=1)\n",
+  "rows_returned": 21,
+  "times_ms": [
+    6244.29,
+    6324.79,
+    6245.6,
+    6262.14,
+    6580.9
+  ],
+  "median_ms": 6262.14,
+  "min_ms": 6244.29,
+  "max_ms": 6580.9,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 2,
+    "Handler_read_first": 2,
+    "Handler_read_key": 333091,
+    "Handler_read_last": 0,
+    "Handler_read_next": 2,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 855783,
+    "Select_full_join": 1,
+    "Select_range": 0,
+    "Select_scan": 1,
+    "Sort_merge_passes": 1,
+    "Sort_range": 0,
+    "Sort_rows": 32483,
+    "Sort_scan": 1
+  },
+  "explain_analyze": "-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)  (actual time=6540..6545 rows=21 loops=1)\n    -> Sort: f.fiscal_year, g.`code`  (actual time=6540..6540 rows=32483 loops=1)\n        -> Stream results  (cost=188775 rows=4410) (actual time=1.3..6534 rows=32483 loops=1)\n            -> Nested loop inner join  (cost=188775 rows=4410) (actual time=1.3..6530 rows=32483 loops=1)\n                -> Inner hash join (no condition)  (cost=96389 rows=21016) (actual time=0.632..153 rows=1.58e+6 loops=1)\n                    -> Filter: (f.fiscal_year between 2016 and 2026)  (cost=43465 rows=94583) (actual time=0.584..110 rows=789753 loops=1)\n                        -> Table scan on f  (cost=43465 rows=851329) (actual time=0.584..83 rows=855782 loops=1)\n                    -> Hash\n                        -> Covering index scan on g using uq_agency_code  (cost=1.2 rows=2) (actual time=0.0435..0.0449 rows=2 loops=1)\n                -> Filter: ((a.agency_id = g.agency_id) and ((a.title like <cache>(concat('%',(@topic),'%'))) or (a.abstract like <cache>(concat('%',(@topic),'%')))))  (cost=0.477 rows=0.21) (actual time=0.00399..0.00399 rows=0.0206 loops=1.58e+6)\n                    -> Single-row index lookup on a using PRIMARY (award_id = f.award_id)  (cost=0.477 rows=1) (actual time=335e-6..351e-6 rows=1 loops=1.58e+6)\n"
+}

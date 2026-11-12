@@ -1,0 +1,104 @@
+{
+  "experiment": "E3",
+  "config": "baseline_all_small_sortbuf",
+  "when": "2026-11-11T15:32:21",
+  "query": "SELECT a.award_id, g.code AS agency, a.source_award_no, a.title, i.name AS institution, a.total_amount\nFROM award a\nJOIN agency g      ON g.agency_id = a.agency_id\nJOIN institution i ON i.inst_id   = a.inst_id\nWHERE a.program = @program\nORDER BY a.total_amount DESC\n",
+  "indexes_added": [],
+  "index_build_ms": {},
+  "session_settings": [
+    "SET SESSION sort_buffer_size = 32768"
+  ],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "32768",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ]
+  },
+  "explain_tree": "-> Nested loop inner join  (cost=189887 rows=301314)\n    -> Nested loop inner join  (cost=139947 rows=301314)\n        -> Sort: a.total_amount DESC  (cost=102283 rows=301314)\n            -> Filter: (a.program = <cache>((@program)))  (cost=102283 rows=301314)\n                -> Table scan on a  (cost=102283 rows=301314)\n        -> Single-row index lookup on g using PRIMARY (agency_id = a.agency_id)  (cost=0.25 rows=1)\n    -> Single-row index lookup on i using PRIMARY (inst_id = a.inst_id)  (cost=0.657 rows=1)\n",
+  "rows_returned": 22896,
+  "times_ms": [
+    420.18,
+    420.27,
+    422.02,
+    423.52,
+    428.34
+  ],
+  "median_ms": 422.02,
+  "min_ms": 420.18,
+  "max_ms": 428.34,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 0,
+    "Handler_read_first": 1,
+    "Handler_read_key": 21871,
+    "Handler_read_last": 0,
+    "Handler_read_next": 0,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 366636,
+    "Select_full_join": 0,
+    "Select_range": 0,
+    "Select_scan": 1,
+    "Sort_merge_passes": 16,
+    "Sort_range": 0,
+    "Sort_rows": 22896,
+    "Sort_scan": 1
+  },
+  "filesort": [
+    {
+      "filesort_priority_queue_optimization": {
+        "usable": false,
+        "cause": "not applicable (no LIMIT)"
+      }
+    },
+    {
+      "filesort_summary": {
+        "memory_available": 32768,
+        "key_size": 8,
+        "row_size": 3582,
+        "max_rows_per_buffer": 9,
+        "num_rows_estimate": 301314,
+        "num_rows_found": 22896,
+        "num_initial_chunks_spilled_to_disk": 105,
+        "peak_memory_used": 36792,
+        "sort_algorithm": "std::stable_sort",
+        "sort_mode": "<fixed_sort_key, packed_additional_fields>"
+      }
+    }
+  ],
+  "explain_analyze": "-> Nested loop inner join  (cost=189102 rows=301314) (actual time=361..376 rows=22896 loops=1)\n    -> Nested loop inner join  (cost=139162 rows=301314) (actual time=361..364 rows=22896 loops=1)\n        -> Sort: a.total_amount DESC  (cost=101497 rows=301314) (actual time=360..361 rows=22896 loops=1)\n            -> Filter: (a.program = <cache>((@program)))  (cost=101497 rows=301314) (actual time=0.0917..351 rows=22896 loops=1)\n                -> Table scan on a  (cost=101497 rows=301314) (actual time=0.0245..335 rows=366635 loops=1)\n        -> Single-row index lookup on g using PRIMARY (agency_id = a.agency_id)  (cost=0.25 rows=1) (actual time=38.5e-6..54.9e-6 rows=1 loops=22896)\n    -> Single-row index lookup on i using PRIMARY (inst_id = a.inst_id)  (cost=0.657 rows=1) (actual time=410e-6..425e-6 rows=1 loops=22896)\n"
+}

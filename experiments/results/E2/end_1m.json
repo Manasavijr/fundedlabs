@@ -1,0 +1,93 @@
+{
+  "experiment": "E2",
+  "config": "end_1m",
+  "when": "2026-11-11T15:32:06",
+  "query": "SELECT a.award_id, a.source_award_no, a.title, i.name AS institution, a.end_date, a.total_amount\nFROM award a\nJOIN institution i ON i.inst_id = a.inst_id\nWHERE a.end_date BETWEEN @today AND @today + INTERVAL @months MONTH\nORDER BY a.end_date",
+  "indexes_added": [
+    "ix_award_end"
+  ],
+  "index_build_ms": {
+    "ix_award_end": 452
+  },
+  "session_settings": [
+    "SET @months = 1"
+  ],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ],
+      [
+        "award",
+        "1",
+        "ix_award_end",
+        "1",
+        "end_date"
+      ]
+    ]
+  },
+  "explain_tree": "-> Nested loop inner join  (cost=1549 rows=686)\n    -> Index range scan on a using ix_award_end over ('2026-10-12' <= end_date <= '2026-11-12'), with index condition: (a.end_date between <cache>((@today)) and <cache>(((@today) + interval (@months) month)))  (cost=795 rows=686)\n    -> Single-row index lookup on i using PRIMARY (inst_id = a.inst_id)  (cost=1 rows=1)\n",
+  "rows_returned": 686,
+  "times_ms": [
+    5.32,
+    5.24,
+    4.51,
+    4.37,
+    4.41
+  ],
+  "median_ms": 4.51,
+  "min_ms": 4.37,
+  "max_ms": 5.32,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 0,
+    "Handler_read_first": 0,
+    "Handler_read_key": 675,
+    "Handler_read_last": 0,
+    "Handler_read_next": 686,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 0,
+    "Select_full_join": 0,
+    "Select_range": 1,
+    "Select_scan": 0,
+    "Sort_merge_passes": 0,
+    "Sort_range": 0,
+    "Sort_rows": 0,
+    "Sort_scan": 0
+  },
+  "explain_analyze": "-> Nested loop inner join  (cost=1215 rows=686) (actual time=0.0272..0.994 rows=686 loops=1)\n    -> Index range scan on a using ix_award_end over ('2026-10-12' <= end_date <= '2026-11-12'), with index condition: (a.end_date between <cache>((@today)) and <cache>(((@today) + interval (@months) month)))  (cost=791 rows=686) (actual time=0.0257..0.599 rows=686 loops=1)\n    -> Single-row index lookup on i using PRIMARY (inst_id = a.inst_id)  (cost=0.519 rows=1) (actual time=481e-6..496e-6 rows=1 loops=686)\n"
+}

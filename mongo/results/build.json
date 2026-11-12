@@ -1,0 +1,34 @@
+{
+  "state": "CA",
+  "since": "2021-10-01",
+  "awards": 30726,
+  "publications": 134902,
+  "load_seconds": 10.9,
+  "index_build_seconds": 4.58,
+  "built_at": "2026-11-11T15:48:29",
+  "collections": {
+    "awards": {
+      "count": 30726,
+      "size": 108392843,
+      "avgObjSize": 3527,
+      "storageSize": 4096,
+      "totalIndexSize": 80072704,
+      "indexSizes": {
+        "_id_": 4096,
+        "text_title_abstract": 79314944,
+        "ix_investigators_inv": 348160,
+        "ix_inst_end": 405504
+      }
+    },
+    "publications": {
+      "count": 134902,
+      "size": 27326217,
+      "avgObjSize": 202,
+      "storageSize": 4096,
+      "totalIndexSize": 4096,
+      "indexSizes": {
+        "_id_": 4096
+      }
+    }
+  }
+}

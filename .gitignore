@@ -1,0 +1,30 @@
+# Data: raw downloads, cleaned TSVs and NSF API snapshots (large; API files hold PI emails)
+data/*
+!data/README.md
+!data/.gitkeep
+
+# Local query output dumps
+q_results.txt
+*.sql.gz
+*.dump
+*.bak
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Web
+node_modules/
+web/node_modules/
+.next/
+web/.next/
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.*
+mongo/results/*.tmp

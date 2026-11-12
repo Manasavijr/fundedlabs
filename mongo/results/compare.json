@@ -1,0 +1,434 @@
+{
+  "run_at": "2026-11-11T15:48:42",
+  "mysql_version": "9.7.4",
+  "mongo_version": "9.0.8",
+  "mongo_awards": 30726,
+  "params": {
+    "state": "CA",
+    "since": "2021-10-01",
+    "topic": "machine learning",
+    "runs": 5
+  },
+  "ops": {
+    "1_keyword": {
+      "question": "Which awards in the subset mention 'machine learning'?",
+      "mongo": {
+        "query": "db.awards.find({$text: {$search: '\"machine learning\"'}})",
+        "matches": 2038,
+        "timing": {
+          "median_ms": 26.27,
+          "min_ms": 25.95,
+          "max_ms": 36.58,
+          "runs": 5
+        },
+        "explain": {
+          "stages": [
+            "PROJECTION_SIMPLE",
+            "TEXT_MATCH",
+            "FETCH",
+            "OR",
+            "IXSCAN"
+          ],
+          "totalDocsExamined": 6455,
+          "totalKeysExamined": 8779,
+          "nReturned": 2038
+        }
+      },
+      "mysql_like": {
+        "query": "SELECT a.award_id FROM award a JOIN institution i ON i.inst_id = a.inst_id\n                   WHERE i.state = %(state)s AND a.end_date >= %(since)s\n                     AND (a.title LIKE CONCAT('%%', %(topic)s, '%%') OR a.abstract LIKE CONCAT('%%', %(topic)s, '%%'))",
+        "matches": 2038,
+        "timing": {
+          "median_ms": 452.37,
+          "min_ms": 450.15,
+          "max_ms": 455.89,
+          "runs": 5
+        },
+        "explain_analyze": "-> Nested loop inner join  (cost=45955 rows=2810) (actual time=0.209..453 rows=2038 loops=1)\n    -> Filter: (i.state = 'CA')  (cost=1760 rows=1663) (actual time=0.0266..2.51 rows=2930 loops=1)\n        -> Covering index scan on i using uq_institution  (cost=1760 rows=16633) (actual time=0.0246..1.91 rows=16656 loops=1)\n    -> Filter: ((a.end_date >= DATE'2021-10-01') and ((a.title like <cache>(concat('%','machine learning','%'))) or (a.abstract like <cache>(concat('%','machine learning','%')))))  (cost=24.2 rows=1.69) (actual time=0.0325..0.154 rows=0.696 loops=2930)\n        -> Index lookup on a using fk_award_inst (inst_id = i.inst_id)  (cost=24.2 rows=24.2) (actual time=0.00524..0.0785 rows=16.3 loops=2930)\n"
+      },
+      "overlap": {
+        "both": 2038,
+        "mongo_only": 0,
+        "mysql_only": 0,
+        "mongo_only_examples": [],
+        "mysql_only_examples": []
+      },
+      "mysql_fulltext": "skipped: ft_award_text not present (it exists only during experiment E6)",
+      "note": "Results can differ by design: $text stems words and ignores case/punctuation (e.g. 'learning' also matches 'learn'), LIKE matches the exact substring."
+    },
+    "2_funding_by_year": {
+      "question": "How much funding went to the subset per fiscal year and agency?",
+      "mongo": {
+        "pipeline": [
+          {
+            "$unwind": "$funding"
+          },
+          {
+            "$match": {
+              "funding.fiscal_year": {
+                "$gte": 2016,
+                "$lte": 2026
+              }
+            }
+          },
+          {
+            "$group": {
+              "_id": {
+                "fy": "$funding.fiscal_year",
+                "agency": "$agency"
+              },
+              "awards": {
+                "$sum": 1
+              },
+              "funding": {
+                "$sum": "$funding.amount"
+              }
+            }
+          },
+          {
+            "$sort": {
+              "_id.fy": 1,
+              "_id.agency": 1
+            }
+          }
+        ],
+        "groups": 21,
+        "timing": {
+          "median_ms": 47.38,
+          "min_ms": 46.95,
+          "max_ms": 47.54,
+          "runs": 5
+        },
+        "explain": {
+          "stages": [
+            "PROJECTION_SIMPLE",
+            "COLLSCAN"
+          ],
+          "totalDocsExamined": 30726,
+          "totalKeysExamined": 0,
+          "nReturned": 30726
+        }
+      },
+      "mysql": {
+        "query": "SELECT f.fiscal_year, g.code AS agency, COUNT(DISTINCT a.award_id) AS awards, SUM(f.amount) AS funding\n              FROM award a\n              JOIN institution i   ON i.inst_id = a.inst_id\n              JOIN award_funding f ON f.award_id = a.award_id\n              JOIN agency g        ON g.agency_id = a.agency_id\n              WHERE i.state = %(state)s AND a.end_date >= %(since)s AND f.fiscal_year BETWEEN 2016 AND 2026\n              GROUP BY f.fiscal_year, g.code\n              ORDER BY f.fiscal_year, g.code",
+        "groups": 21,
+        "timing": {
+          "median_ms": 341.72,
+          "min_ms": 339.89,
+          "max_ms": 346.29,
+          "runs": 5
+        },
+        "explain_analyze": "-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)  (actual time=353..367 rows=21 loops=1)\n    -> Sort: f.fiscal_year, g.`code`  (actual time=353..355 rows=83501 loops=1)\n        -> Stream results  (cost=70548 rows=3215) (actual time=0.0506..336 rows=83501 loops=1)\n            -> Nested loop inner join  (cost=70548 rows=3215) (actual time=0.0498..329 rows=83501 loops=1)\n                -> Nested loop inner join  (cost=69423 rows=3215) (actual time=0.0486..318 rows=83501 loops=1)\n                    -> Nested loop inner join  (cost=45955 rows=13391) (actual time=0.0468..232 rows=30726 loops=1)\n                        -> Filter: (i.state = 'CA')  (cost=1760 rows=1663) (actual time=0.0236..2.48 rows=2930 loops=1)\n                            -> Covering index scan on i using uq_institution  (cost=1760 rows=16633) (actual time=0.0223..1.9 rows=16656 loops=1)\n                        -> Filter: (a.end_date >= DATE'2021-10-01')  (cost=24.2 rows=8.05) (actual time=0.00975..0.0781 rows=10.5 loops=2930)\n                            -> Index lookup on a using fk_award_inst (inst_id = i.inst_id)  (cost=24.2 rows=24.2) (actual time=0.00815..0.0773 rows=16.3 loops=2930)\n                    -> Filter: (f.fiscal_year between 2016 and 2026)  (cost=1.54 rows=0.24) (actual time=0.00233..0.00265 rows=2.72 loops=30726)\n                        -> Index lookup on f using PRIMARY (award_id = a.award_id)  (cost=1.54 rows=2.16) (actual time=0.00225..0.00249 rows=2.72 loops=30726)\n                -> Single-row index lookup on g using PRIMARY (agency_id = a.agency_id)  (cost=0.25 rows=1) (actual time=43.9e-6..59.7e-6 rows=1 loops=83501)\n"
+      },
+      "results_match": true,
+      "rows": [
+        {
+          "fiscal_year": 2016,
+          "agency": "NIH",
+          "awards": 1987,
+          "funding": "1388577586.00"
+        },
+        {
+          "fiscal_year": 2016,
+          "agency": "NSF",
+          "awards": 295,
+          "funding": "217946393.00"
+        },
+        {
+          "fiscal_year": 2017,
+          "agency": "NIH",
+          "awards": 3020,
+          "funding": "2126932186.00"
+        },
+        {
+          "fiscal_year": 2017,
+          "agency": "NSF",
+          "awards": 651,
+          "funding": "431128867.00"
+        },
+        {
+          "fiscal_year": 2018,
+          "agency": "NIH",
+          "awards": 4291,
+          "funding": "2891789277.00"
+        },
+        {
+          "fiscal_year": 2018,
+          "agency": "NSF",
+          "awards": 1357,
+          "funding": "735792010.00"
+        },
+        {
+          "fiscal_year": 2019,
+          "agency": "NIH",
+          "awards": 5948,
+          "funding": "3798245647.00"
+        },
+        {
+          "fiscal_year": 2019,
+          "agency": "NSF",
+          "awards": 1730,
+          "funding": "901293321.00"
+        },
+        {
+          "fiscal_year": 2020,
+          "agency": "NIH",
+          "awards": 7730,
+          "funding": "4745926791.00"
+        },
+        {
+          "fiscal_year": 2020,
+          "agency": "NSF",
+          "awards": 2145,
+          "funding": "1002815000.00"
+        },
+        {
+          "fiscal_year": 2021,
+          "agency": "NIH",
+          "awards": 8588,
+          "funding": "5011620234.00"
+        },
+        {
+          "fiscal_year": 2021,
+          "agency": "NSF",
+          "awards": 2509,
+          "funding": "1113756859.00"
+        },
+        {
+          "fiscal_year": 2022,
+          "agency": "NIH",
+          "awards": 8658,
+          "funding": "5412323820.00"
+        },
+        {
+          "fiscal_year": 2022,
+          "agency": "NSF",
+          "awards": 2449,
+          "funding": "1118391829.00"
+        },
+        {
+          "fiscal_year": 2023,
+          "agency": "NIH",
+          "awards": 8588,
+          "funding": "5300191943.00"
+        },
+        {
+          "fiscal_year": 2023,
+          "agency": "NSF",
+          "awards": 2321,
+          "funding": "1027729325.00"
+        },
+        {
+          "fiscal_year": 2024,
+          "agency": "NIH",
+          "awards": 8403,
+          "funding": "5085574716.00"
+        },
+        {
+          "fiscal_year": 2024,
+          "agency": "NSF",
+          "awards": 2110,
+          "funding": "950538002.00"
+        },
+        {
+          "fiscal_year": 2025,
+          "agency": "NIH",
+          "awards": 8008,
+          "funding": "5208550451.00"
+        },
+        {
+          "fiscal_year": 2025,
+          "agency": "NSF",
+          "awards": 1711,
+          "funding": "962324516.00"
+        },
+        {
+          "fiscal_year": 2026,
+          "agency": "NSF",
+          "awards": 1002,
+          "funding": "734957668.00"
+        }
+      ],
+      "mismatches": []
+    },
+    "3_coinvestigator_pairs": {
+      "question": "Which pairs of investigators share the most awards in the subset?",
+      "mongo": {
+        "pipeline": [
+          {
+            "$match": {
+              "investigators.1": {
+                "$exists": true
+              }
+            }
+          },
+          {
+            "$project": {
+              "a": "$investigators.inv_id",
+              "b": "$investigators.inv_id"
+            }
+          },
+          {
+            "$unwind": "$a"
+          },
+          {
+            "$unwind": "$b"
+          },
+          {
+            "$match": {
+              "$expr": {
+                "$lt": [
+                  "$a",
+                  "$b"
+                ]
+              }
+            }
+          },
+          {
+            "$group": {
+              "_id": {
+                "a": "$a",
+                "b": "$b"
+              },
+              "shared": {
+                "$sum": 1
+              }
+            }
+          },
+          {
+            "$sort": {
+              "shared": -1,
+              "_id.a": 1,
+              "_id.b": 1
+            }
+          },
+          {
+            "$limit": 20
+          }
+        ],
+        "distinct_pairs": 18886,
+        "timing": {
+          "median_ms": 38.53,
+          "min_ms": 38.08,
+          "max_ms": 41.48,
+          "runs": 5
+        },
+        "explain": {
+          "stages": [
+            "PROJECTION_DEFAULT",
+            "COLLSCAN"
+          ],
+          "totalDocsExamined": 30726,
+          "totalKeysExamined": 0,
+          "nReturned": 8521
+        }
+      },
+      "mysql": {
+        "query": "SELECT x.inv_id AS a, y.inv_id AS b, COUNT(*) AS shared\n              FROM award_investigator x\n              JOIN award_investigator y ON y.award_id = x.award_id AND x.inv_id < y.inv_id\n              JOIN award a              ON a.award_id = x.award_id\n              JOIN institution i        ON i.inst_id = a.inst_id\n              WHERE i.state = %(state)s AND a.end_date >= %(since)s\n              GROUP BY x.inv_id, y.inv_id\n              ORDER BY shared DESC, a, b\n              LIMIT 20",
+        "distinct_pairs": 18886,
+        "timing": {
+          "median_ms": 304.29,
+          "min_ms": 298.82,
+          "max_ms": 330.76,
+          "runs": 5
+        },
+        "explain_analyze": "-> Limit: 20 row(s)  (actual time=314..314 rows=20 loops=1)\n    -> Sort: shared DESC, x.inv_id, y.inv_id, limit input to 20 row(s) per chunk  (actual time=314..314 rows=20 loops=1)\n        -> Table scan on <temporary>  (actual time=312..313 rows=18886 loops=1)\n            -> Aggregate using temporary table  (actual time=312..312 rows=18886 loops=1)\n                -> Nested loop inner join  (cost=64357 rows=8946) (actual time=0.102..307 rows=21278 loops=1)\n                    -> Nested loop inner join  (cost=53572 rows=18958) (actual time=0.0458..268 rows=44159 loops=1)\n                        -> Nested loop inner join  (cost=45955 rows=13391) (actual time=0.0442..226 rows=30726 loops=1)\n                            -> Filter: (i.state = 'CA')  (cost=1760 rows=1663) (actual time=0.0222..2.47 rows=2930 loops=1)\n                                -> Covering index scan on i using uq_institution  (cost=1760 rows=16633) (actual time=0.0206..1.84 rows=16656 loops=1)\n                            -> Filter: (a.end_date >= DATE'2021-10-01')  (cost=24.2 rows=8.05) (actual time=0.00955..0.0761 rows=10.5 loops=2930)\n                                -> Index lookup on a using fk_award_inst (inst_id = i.inst_id)  (cost=24.2 rows=24.2) (actual time=0.00796..0.0753 rows=16.3 loops=2930)\n                        -> Covering index lookup on x using PRIMARY (award_id = a.award_id)  (cost=0.427 rows=1.42) (actual time=0.00112..0.00126 rows=1.44 loops=30726)\n                    -> Filter: (x.inv_id < y.inv_id)  (cost=0.427 rows=0.472) (actual time=757e-6..823e-6 rows=0.482 loops=44159)\n                        -> Covering index lookup on y using PRIMARY (award_id = a.award_id)  (cost=0.427 rows=1.42) (actual time=546e-6..714e-6 rows=1.96 loops=44159)\n"
+      },
+      "results_match": true,
+      "top_pairs": [
+        {
+          "inv_a": 143954,
+          "inv_b": 187734,
+          "shared_awards": 12
+        },
+        {
+          "inv_a": 25029,
+          "inv_b": 58270,
+          "shared_awards": 9
+        },
+        {
+          "inv_a": 132730,
+          "inv_b": 147263,
+          "shared_awards": 8
+        },
+        {
+          "inv_a": 151170,
+          "inv_b": 170838,
+          "shared_awards": 8
+        },
+        {
+          "inv_a": 58270,
+          "inv_b": 65936,
+          "shared_awards": 7
+        },
+        {
+          "inv_a": 58487,
+          "inv_b": 62059,
+          "shared_awards": 7
+        },
+        {
+          "inv_a": 125565,
+          "inv_b": 195281,
+          "shared_awards": 7
+        },
+        {
+          "inv_a": 146077,
+          "inv_b": 170492,
+          "shared_awards": 7
+        },
+        {
+          "inv_a": 116309,
+          "inv_b": 142030,
+          "shared_awards": 6
+        },
+        {
+          "inv_a": 128033,
+          "inv_b": 140893,
+          "shared_awards": 6
+        }
+      ]
+    },
+    "4_update_embedded_investigator": {
+      "question": "An investigator's name changes. What has to be written?",
+      "investigator": {
+        "inv_id": 143954,
+        "name": "Terry B Appelgate",
+        "awards_in_mysql": 44
+      },
+      "mongo": {
+        "update": "db.awards.updateMany({'investigators.inv_id': X}, {$set: {'investigators.$[p].full_name': NEW}}, {arrayFilters: [{'p.inv_id': X}]})",
+        "documents_matched": 28,
+        "documents_modified": 28,
+        "documents_still_with_old_name_after_update": 0,
+        "timing_note": "each timed run = rename + rename back (2 updateMany calls)",
+        "timing": {
+          "median_ms": 1.63,
+          "min_ms": 1.5,
+          "max_ms": 1.68,
+          "runs": 5
+        },
+        "find_explain": {
+          "stages": [
+            "FETCH",
+            "IXSCAN"
+          ],
+          "totalDocsExamined": 28,
+          "totalKeysExamined": 28,
+          "nReturned": 28
+        }
+      },
+      "mysql": {
+        "update": "UPDATE investigator SET full_name = %(name)s WHERE inv_id = %(inv_id)s",
+        "rows_changed": 1,
+        "timing_note": "each timed run = BEGIN; UPDATE; ROLLBACK (data unchanged)",
+        "timing": {
+          "median_ms": 1.25,
+          "min_ms": 0.99,
+          "max_ms": 1.32,
+          "runs": 5
+        }
+      },
+      "reverted": true,
+      "note": "MongoDB has no multi-document atomicity here unless a transaction (replica set) is used; a crash mid-updateMany leaves some documents with the old name. In MySQL the name is stored once (normalized), so every award sees the change through the join."
+    }
+  }
+}

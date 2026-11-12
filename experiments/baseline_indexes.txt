@@ -1,0 +1,37 @@
+## agency
+  PRIMARY                      seq=1 col=agency_id        non_unique=0 type=BTREE
+  uq_agency_code               seq=1 col=code             non_unique=0 type=BTREE
+## institution
+  PRIMARY                      seq=1 col=inst_id          non_unique=0 type=BTREE
+  uq_institution               seq=1 col=name             non_unique=0 type=BTREE
+  uq_institution               seq=2 col=city             non_unique=0 type=BTREE
+  uq_institution               seq=3 col=state            non_unique=0 type=BTREE
+## investigator
+  PRIMARY                      seq=1 col=inv_id           non_unique=0 type=BTREE
+  uq_investigator_nih          seq=1 col=nih_profile_id   non_unique=0 type=BTREE
+  uq_investigator_nsf          seq=1 col=nsf_id           non_unique=0 type=BTREE
+  fk_investigator_inst         seq=1 col=inst_id          non_unique=1 type=BTREE
+## award
+  PRIMARY                      seq=1 col=award_id         non_unique=0 type=BTREE
+  uq_award_source              seq=1 col=agency_id        non_unique=0 type=BTREE
+  uq_award_source              seq=2 col=source_award_no  non_unique=0 type=BTREE
+  fk_award_inst                seq=1 col=inst_id          non_unique=1 type=BTREE
+## award_funding
+  PRIMARY                      seq=1 col=award_id         non_unique=0 type=BTREE
+  PRIMARY                      seq=2 col=fiscal_year      non_unique=0 type=BTREE
+## award_investigator
+  PRIMARY                      seq=1 col=award_id         non_unique=0 type=BTREE
+  PRIMARY                      seq=2 col=inv_id           non_unique=0 type=BTREE
+  fk_ai_inv                    seq=1 col=inv_id           non_unique=1 type=BTREE
+## publication
+  PRIMARY                      seq=1 col=pub_id           non_unique=0 type=BTREE
+  uq_publication_pmid          seq=1 col=pmid             non_unique=0 type=BTREE
+  uq_publication_doi           seq=1 col=doi              non_unique=0 type=BTREE
+## award_publication
+  PRIMARY                      seq=1 col=award_id         non_unique=0 type=BTREE
+  PRIMARY                      seq=2 col=pub_id           non_unique=0 type=BTREE
+  fk_ap_pub                    seq=1 col=pub_id           non_unique=1 type=BTREE
+## outreach
+  PRIMARY                      seq=1 col=outreach_id      non_unique=0 type=BTREE
+  fk_outreach_inv              seq=1 col=inv_id           non_unique=1 type=BTREE
+  fk_outreach_award            seq=1 col=award_id         non_unique=1 type=BTREE

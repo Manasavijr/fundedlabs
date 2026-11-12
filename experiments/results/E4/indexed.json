@@ -1,0 +1,80 @@
+{
+  "experiment": "E4",
+  "config": "indexed",
+  "when": "2026-11-11T15:32:25",
+  "query": "SELECT  i.inv_id, i.full_name, COUNT(*) AS active_awards,\n       SUM(a.total_amount) AS active_award_total, MAX(a.end_date) AS latest_end\nFROM award a\nJOIN award_investigator ai  ON ai.award_id = a.award_id\nJOIN investigator i          ON i.inv_id    = ai.inv_id\nWHERE a.inst_id = @inst_id AND a.start_date <= @today AND a.end_date >= @today\nGROUP BY i.inv_id, i.full_name\nORDER BY active_award_total DESC\nLIMIT 25",
+  "indexes_added": [],
+  "index_build_ms": {},
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ]
+  },
+  "explain_tree": "-> Limit: 25 row(s)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk\n        -> Table scan on <temporary>\n            -> Aggregate using temporary table\n                -> Nested loop inner join  (cost=3138 rows=419)\n                    -> Nested loop inner join  (cost=2677 rows=419)\n                        -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2544 rows=296)\n                            -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2544 rows=2665)\n                        -> Covering index lookup on ai using PRIMARY (award_id = a.award_id)  (cost=0.307 rows=1.42)\n                    -> Single-row index lookup on i using PRIMARY (inv_id = ai.inv_id)  (cost=1 rows=1)\n",
+  "rows_returned": 25,
+  "times_ms": [
+    5.41,
+    4.56,
+    4.29,
+    4.21,
+    4.2
+  ],
+  "median_ms": 4.29,
+  "min_ms": 4.2,
+  "max_ms": 5.41,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 1,
+    "Handler_read_first": 0,
+    "Handler_read_key": 2700,
+    "Handler_read_last": 0,
+    "Handler_read_next": 3688,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 722,
+    "Select_full_join": 0,
+    "Select_range": 0,
+    "Select_scan": 0,
+    "Sort_merge_passes": 0,
+    "Sort_range": 0,
+    "Sort_rows": 25,
+    "Sort_scan": 1
+  },
+  "explain_analyze": "-> Limit: 25 row(s)  (actual time=3.71..3.71 rows=25 loops=1)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk  (actual time=3.71..3.71 rows=25 loops=1)\n        -> Table scan on <temporary>  (actual time=3.6..3.65 rows=721 loops=1)\n            -> Aggregate using temporary table  (actual time=3.6..3.6 rows=721 loops=1)\n                -> Nested loop inner join  (cost=2971 rows=419) (actual time=0.0234..3.25 rows=1023 loops=1)\n                    -> Nested loop inner join  (cost=2665 rows=419) (actual time=0.0224..2.56 rows=1023 loops=1)\n                        -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2533 rows=296) (actual time=0.0209..1.98 rows=661 loops=1)\n                            -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2533 rows=2665) (actual time=0.0203..1.7 rows=2665 loops=1)\n                        -> Covering index lookup on ai using PRIMARY (award_id = a.award_id)  (cost=0.307 rows=1.42) (actual time=626e-6..787e-6 rows=1.55 loops=661)\n                    -> Single-row index lookup on i using PRIMARY (inv_id = ai.inv_id)  (cost=0.63 rows=1) (actual time=588e-6..603e-6 rows=1 loops=1023)\n"
+}

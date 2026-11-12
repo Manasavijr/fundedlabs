@@ -1,0 +1,80 @@
+{
+  "experiment": "E4",
+  "config": "no_join_index_no_hash",
+  "when": "2026-11-11T15:32:26",
+  "query": "SELECT /*+ NO_BNL(ai, i) */ i.inv_id, i.full_name, COUNT(*) AS active_awards,\n       SUM(a.total_amount) AS active_award_total, MAX(a.end_date) AS latest_end\nFROM award a\nJOIN award_investigator ai IGNORE INDEX FOR JOIN (PRIMARY, fk_ai_inv) ON ai.award_id = a.award_id\nJOIN investigator i IGNORE INDEX FOR JOIN (PRIMARY)         ON i.inv_id    = ai.inv_id\nWHERE a.inst_id = @inst_id AND a.start_date <= @today AND a.end_date >= @today\nGROUP BY i.inv_id, i.full_name\nORDER BY active_award_total DESC\nLIMIT 25",
+  "indexes_added": [],
+  "index_build_ms": {},
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ]
+  },
+  "explain_tree": "-> Limit: 25 row(s)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk\n        -> Table scan on <temporary>\n            -> Aggregate using temporary table\n                -> Nested loop inner join  (cost=25.3e+6 rows=419)\n                    -> Nested loop inner join  (cost=16.1e+6 rows=419)\n                        -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2546 rows=296)\n                            -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2546 rows=2665)\n                        -> Filter: (ai.award_id = a.award_id)  (cost=249 rows=1.42)\n                            -> Table scan on ai  (cost=249 rows=540408)\n                    -> Filter: (i.inv_id = ai.inv_id)  (cost=248 rows=1)\n                        -> Table scan on i  (cost=248 rows=218215)\n",
+  "rows_returned": 25,
+  "times_ms": [
+    48673.18,
+    49627.76,
+    52927.46,
+    51183.45,
+    52230.75
+  ],
+  "median_ms": 51183.45,
+  "min_ms": 48673.18,
+  "max_ms": 52927.46,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 1,
+    "Handler_read_first": 1684,
+    "Handler_read_key": 2708,
+    "Handler_read_last": 0,
+    "Handler_read_next": 2665,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 581660822,
+    "Select_full_join": 2,
+    "Select_range": 0,
+    "Select_scan": 0,
+    "Sort_merge_passes": 0,
+    "Sort_range": 0,
+    "Sort_rows": 25,
+    "Sort_scan": 1
+  },
+  "explain_analyze": "-> Limit: 25 row(s)  (actual time=58692..58692 rows=25 loops=1)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk  (actual time=58692..58692 rows=25 loops=1)\n        -> Table scan on <temporary>  (actual time=58691..58691 rows=721 loops=1)\n            -> Aggregate using temporary table  (actual time=58691..58691 rows=721 loops=1)\n                -> Nested loop inner join  (cost=25.3e+6 rows=419) (actual time=12.3..58685 rows=1023 loops=1)\n                    -> Nested loop inner join  (cost=16.1e+6 rows=419) (actual time=0.668..33108 rows=1023 loops=1)\n                        -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2577 rows=296) (actual time=0.0393..11.6 rows=661 loops=1)\n                            -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2577 rows=2665) (actual time=0.0375..9.86 rows=2665 loops=1)\n                        -> Filter: (ai.award_id = a.award_id)  (cost=249 rows=1.42) (actual time=24.2..50.1 rows=1.55 loops=661)\n                            -> Table scan on ai  (cost=249 rows=540408) (actual time=0.618..40.2 rows=540791 loops=661)\n                    -> Filter: (i.inv_id = ai.inv_id)  (cost=248 rows=1) (actual time=10.7..25 rows=1 loops=1023)\n                        -> Table scan on i  (cost=248 rows=218215) (actual time=0.0108..21 rows=219155 loops=1023)\n"
+}

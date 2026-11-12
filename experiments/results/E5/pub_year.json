@@ -1,0 +1,114 @@
+{
+  "experiment": "E5",
+  "config": "pub_year",
+  "when": "2026-11-11T15:39:20",
+  "query": "SELECT p.pub_id, p.pmid, p.title, p.journal, p.pub_year,\n       GROUP_CONCAT(DISTINCT a.source_award_no ORDER BY a.source_award_no) AS from_awards\nFROM award_investigator ai\nJOIN award a                       ON a.award_id  = ai.award_id\nJOIN award_publication ap  ON ap.award_id = ai.award_id\nJOIN publication p                 ON p.pub_id    = ap.pub_id\nWHERE ai.inv_id = @inv_id AND p.pub_year >= YEAR(@today) - 2\nGROUP BY p.pub_id, p.pmid, p.title, p.journal, p.pub_year\nORDER BY p.pub_year DESC, p.pub_id",
+  "indexes_added": [
+    "ix_publication_year"
+  ],
+  "index_build_ms": {
+    "ix_publication_year": 685
+  },
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ],
+    "publication": [
+      [
+        "publication",
+        "0",
+        "PRIMARY",
+        "1",
+        "pub_id"
+      ],
+      [
+        "publication",
+        "0",
+        "uq_publication_pmid",
+        "1",
+        "pmid"
+      ],
+      [
+        "publication",
+        "0",
+        "uq_publication_doi",
+        "1",
+        "doi"
+      ],
+      [
+        "publication",
+        "1",
+        "ix_publication_year",
+        "1",
+        "pub_year"
+      ]
+    ]
+  },
+  "explain_tree": "-> Sort: p.pub_year DESC, p.pub_id\n    -> Stream results\n        -> Group aggregate: group_concat(distinct award.source_award_no order by award.source_award_no ASC separator ',')\n            -> Sort: p.pub_id, p.pmid, p.title, p.journal, p.pub_year\n                -> Stream results  (cost=449 rows=149)\n                    -> Nested loop inner join  (cost=449 rows=149)\n                        -> Nested loop inner join  (cost=96.4 rows=361)\n                            -> Nested loop inner join  (cost=32.8 rows=27)\n                                -> Covering index lookup on ai using fk_ai_inv (inv_id = (@inv_id))  (cost=3.74 rows=27)\n                                -> Single-row index lookup on a using PRIMARY (award_id = ai.award_id)  (cost=0.979 rows=1)\n                            -> Covering index lookup on ap using PRIMARY (award_id = ai.award_id)  (cost=1.07 rows=13.4)\n                        -> Filter: (p.pub_year >= <cache>((year((@today)) - 2)))  (cost=0.877 rows=0.412)\n                            -> Single-row index lookup on p using PRIMARY (pub_id = ap.pub_id)  (cost=0.877 rows=1)\n",
+  "rows_returned": 357,
+  "times_ms": [
+    7.33,
+    7.61,
+    8.24,
+    7.41,
+    7.81
+  ],
+  "median_ms": 7.61,
+  "min_ms": 7.33,
+  "max_ms": 8.24,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 1,
+    "Handler_read_first": 0,
+    "Handler_read_key": 1988,
+    "Handler_read_last": 0,
+    "Handler_read_next": 1960,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 0,
+    "Select_full_join": 0,
+    "Select_range": 0,
+    "Select_scan": 0,
+    "Sort_merge_passes": 1,
+    "Sort_range": 0,
+    "Sort_rows": 893,
+    "Sort_scan": 2
+  },
+  "explain_analyze": "-> Sort: p.pub_year DESC, p.pub_id  (actual time=4.72..4.75 rows=357 loops=1)\n    -> Stream results  (actual time=4.07..4.66 rows=357 loops=1)\n        -> Group aggregate: group_concat(distinct award.source_award_no order by award.source_award_no ASC separator ',')  (actual time=4.07..4.5 rows=357 loops=1)\n            -> Sort: p.pub_id, p.pmid, p.title, p.journal, p.pub_year  (actual time=4.07..4.12 rows=536 loops=1)\n                -> Stream results  (cost=435 rows=149) (actual time=0.503..3.25 rows=536 loops=1)\n                    -> Nested loop inner join  (cost=435 rows=149) (actual time=0.501..3.04 rows=536 loops=1)\n                        -> Nested loop inner join  (cost=96.3 rows=361) (actual time=0.0116..0.46 rows=1933 loops=1)\n                            -> Nested loop inner join  (cost=32.8 rows=27) (actual time=0.00821..0.053 rows=27 loops=1)\n                                -> Covering index lookup on ai using fk_ai_inv (inv_id = (@inv_id))  (cost=3.74 rows=27) (actual time=0.00479..0.00675 rows=27 loops=1)\n                                -> Single-row index lookup on a using PRIMARY (award_id = ai.award_id)  (cost=0.979 rows=1) (actual time=0.00155..0.00158 rows=1 loops=27)\n                            -> Covering index lookup on ap using PRIMARY (award_id = ai.award_id)  (cost=1.07 rows=13.4) (actual time=0.00195..0.0116 rows=71.6 loops=27)\n                        -> Filter: (p.pub_year >= <cache>((year((@today)) - 2)))  (cost=0.839 rows=0.412) (actual time=0.00123..0.00125 rows=0.277 loops=1933)\n                            -> Single-row index lookup on p using PRIMARY (pub_id = ap.pub_id)  (cost=0.839 rows=1) (actual time=0.0011..0.00112 rows=1 loops=1933)\n"
+}

@@ -1,0 +1,91 @@
+{
+  "experiment": "E1",
+  "config": "inst_end",
+  "when": "2026-11-11T15:32:01",
+  "query": "SELECT a.award_id, a.source_award_no, a.title, a.start_date, a.end_date, a.total_amount\nFROM award a\nWHERE a.inst_id = @inst_id AND a.start_date <= @today AND a.end_date >= @today\nORDER BY a.end_date DESC\nLIMIT 100",
+  "indexes_added": [
+    "ix_award_inst_end"
+  ],
+  "index_build_ms": {
+    "ix_award_inst_end": 495
+  },
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "ix_award_inst_end",
+        "1",
+        "inst_id"
+      ],
+      [
+        "award",
+        "1",
+        "ix_award_inst_end",
+        "2",
+        "end_date"
+      ]
+    ]
+  },
+  "explain_tree": "-> Limit: 100 row(s)  (cost=735 rows=100)\n    -> Filter: (a.start_date <= <cache>((@today)))  (cost=735 rows=221)\n        -> Index range scan on a using ix_award_inst_end over (inst_id = 170 AND '2026-10-12' <= end_date) (reverse), with index condition: ((a.inst_id = <cache>((@inst_id))) and (a.end_date >= <cache>((@today))))  (cost=735 rows=662)\n",
+  "rows_returned": 100,
+  "times_ms": [
+    1.65,
+    1.56,
+    1.58,
+    1.6,
+    1.59
+  ],
+  "median_ms": 1.59,
+  "min_ms": 1.56,
+  "max_ms": 1.65,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 0,
+    "Handler_read_first": 0,
+    "Handler_read_key": 1,
+    "Handler_read_last": 0,
+    "Handler_read_next": 0,
+    "Handler_read_prev": 100,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 0,
+    "Select_full_join": 0,
+    "Select_range": 1,
+    "Select_scan": 0,
+    "Sort_merge_passes": 0,
+    "Sort_range": 0,
+    "Sort_rows": 0,
+    "Sort_scan": 0
+  },
+  "explain_analyze": "-> Limit: 100 row(s)  (cost=735 rows=100) (actual time=0.0278..0.115 rows=100 loops=1)\n    -> Filter: (a.start_date <= <cache>((@today)))  (cost=735 rows=221) (actual time=0.0277..0.112 rows=100 loops=1)\n        -> Index range scan on a using ix_award_inst_end over (inst_id = 170 AND '2026-10-12' <= end_date) (reverse), with index condition: ((a.inst_id = <cache>((@inst_id))) and (a.end_date >= <cache>((@today))))  (cost=735 rows=662) (actual time=0.0273..0.104 rows=101 loops=1)\n"
+}

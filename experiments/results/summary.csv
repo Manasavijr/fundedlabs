@@ -1,0 +1,22 @@
+when,experiment,config,median_ms,min_ms,max_ms,runs,rows_returned,Handler_read_key,Handler_read_next,Handler_read_rnd_next,Sort_merge_passes,Created_tmp_disk_tables,plan_top
+2026-11-11T15:32:00,E1,baseline,3.78,3.62,4.96,5,100,1,2665,0,0,0,-> Limit: 100 row(s) (cost=2669 rows=100)
+2026-11-11T15:32:00,E1,end,3.94,3.64,4.96,5,100,1,2665,0,0,0,-> Limit: 100 row(s) (cost=2649 rows=100)
+2026-11-11T15:32:01,E1,inst_end,1.59,1.56,1.65,5,100,1,0,0,0,0,-> Limit: 100 row(s) (cost=735 rows=100)
+2026-11-11T15:32:02,E1,end_inst,3.5,3.22,3.99,5,100,1,2665,0,0,0,-> Limit: 100 row(s) (cost=2618 rows=100)
+2026-11-11T15:32:02,E2,noindex_12m,514.82,495.18,525.47,5,44055,43561,0,366636,5,0,-> Nested loop inner join (cost=135182 rows=274273)
+2026-11-11T15:32:06,E2,end_1m,4.51,4.37,5.32,5,686,675,686,0,0,0,-> Nested loop inner join (cost=1549 rows=686)
+2026-11-11T15:32:07,E2,end_12m,222.73,211.36,238.66,5,44055,43557,44055,0,0,0,-> Nested loop inner join (cost=153115 rows=83324)
+2026-11-11T15:32:09,E2,end_60m,673.89,653.35,688.48,5,87398,86355,0,366636,8,0,-> Nested loop inner join (cost=195056 rows=285862)
+2026-11-11T15:32:14,E3,baseline_top50,346.27,345.61,374.92,5,50,52,0,366636,1,0,-> Limit: 50 row(s) (cost=195367 rows=50)
+2026-11-11T15:32:17,E3,baseline_all,417.62,410.08,418.92,5,22896,21856,0,366636,1,0,-> Nested loop inner join (cost=193115 rows=289725)
+2026-11-11T15:32:21,E3,baseline_all_small_sortbuf,422.02,420.18,428.34,5,22896,21871,0,366636,16,0,-> Nested loop inner join (cost=189887 rows=301314)
+2026-11-11T15:32:25,E3,program_amount_top50,0.79,0.69,0.82,5,50,52,0,0,0,0,-> Limit: 50 row(s) (cost=120932 rows=50)
+2026-11-11T15:32:25,E4,indexed,4.29,4.2,5.41,5,25,2700,3688,722,0,0,-> Limit: 25 row(s)
+2026-11-11T15:32:25,E4,no_join_index_hash,75.58,74.07,81.63,5,25,1026,2665,760670,0,0,-> Limit: 25 row(s)
+2026-11-11T15:32:26,E4,no_join_index_no_hash,51183.45,48673.18,52927.46,5,25,2708,2665,581660822,0,0,-> Limit: 25 row(s)
+2026-11-11T15:39:19,E5,baseline,5.77,5.27,6.79,5,357,1988,1960,0,1,0,"-> Sort: p.pub_year DESC, p.pub_id"
+2026-11-11T15:39:20,E5,pub_year,7.61,7.33,8.24,5,357,1988,1960,0,1,0,"-> Sort: p.pub_year DESC, p.pub_id"
+2026-11-11T15:39:20,E5,ap_pk_ignored,1006.59,761.46,1075.56,5,357,731778,536406,969423,63,0,"-> Sort: p.pub_year DESC, p.pub_id"
+2026-11-11T15:39:28,E6,like,6262.14,6244.29,6580.9,5,21,333091,2,855783,1,0,"-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)"
+2026-11-11T15:44:35,E6,like_ft_present,6369.35,6348.08,6421.82,5,21,333091,2,855783,1,0,"-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)"
+2026-11-11T15:47:59,E6,fulltext,277.57,275.59,280.74,5,21,19541,36551,0,1,0,"-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)"

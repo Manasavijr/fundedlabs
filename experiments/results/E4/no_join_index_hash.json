@@ -1,0 +1,80 @@
+{
+  "experiment": "E4",
+  "config": "no_join_index_hash",
+  "when": "2026-11-11T15:32:25",
+  "query": "SELECT  i.inv_id, i.full_name, COUNT(*) AS active_awards,\n       SUM(a.total_amount) AS active_award_total, MAX(a.end_date) AS latest_end\nFROM award a\nJOIN award_investigator ai IGNORE INDEX FOR JOIN (PRIMARY, fk_ai_inv) ON ai.award_id = a.award_id\nJOIN investigator i IGNORE INDEX FOR JOIN (PRIMARY)         ON i.inv_id    = ai.inv_id\nWHERE a.inst_id = @inst_id AND a.start_date <= @today AND a.end_date >= @today\nGROUP BY i.inv_id, i.full_name\nORDER BY active_award_total DESC\nLIMIT 25",
+  "indexes_added": [],
+  "index_build_ms": {},
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ]
+    ]
+  },
+  "explain_tree": "-> Limit: 25 row(s)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk\n        -> Table scan on <temporary>\n            -> Aggregate using temporary table\n                -> Inner hash join (i.inv_id = ai.inv_id)  (cost=25.1e+6 rows=419)\n                    -> Table scan on i  (cost=1.56 rows=218215)\n                    -> Hash\n                        -> Inner hash join (ai.award_id = a.award_id)  (cost=16e+6 rows=419)\n                            -> Table scan on ai  (cost=1.06 rows=540408)\n                            -> Hash\n                                -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2534 rows=296)\n                                    -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2534 rows=2665)\n",
+  "rows_returned": 25,
+  "times_ms": [
+    74.07,
+    81.12,
+    75.58,
+    74.33,
+    81.63
+  ],
+  "median_ms": 75.58,
+  "min_ms": 74.07,
+  "max_ms": 81.63,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 1,
+    "Handler_read_first": 2,
+    "Handler_read_key": 1026,
+    "Handler_read_last": 0,
+    "Handler_read_next": 2665,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 760670,
+    "Select_full_join": 2,
+    "Select_range": 0,
+    "Select_scan": 0,
+    "Sort_merge_passes": 0,
+    "Sort_range": 0,
+    "Sort_rows": 25,
+    "Sort_scan": 1
+  },
+  "explain_analyze": "-> Limit: 25 row(s)  (actual time=82.8..82.8 rows=25 loops=1)\n    -> Sort: active_award_total DESC, limit input to 25 row(s) per chunk  (actual time=82.8..82.8 rows=25 loops=1)\n        -> Table scan on <temporary>  (actual time=82.7..82.7 rows=721 loops=1)\n            -> Aggregate using temporary table  (actual time=82.7..82.7 rows=721 loops=1)\n                -> Inner hash join (i.inv_id = ai.inv_id)  (cost=25.1e+6 rows=419) (actual time=55.3..82.3 rows=1023 loops=1)\n                    -> Table scan on i  (cost=0.621 rows=218215) (actual time=0.0213..21.6 rows=219155 loops=1)\n                    -> Hash\n                        -> Inner hash join (ai.award_id = a.award_id)  (cost=16e+6 rows=419) (actual time=3.4..55.1 rows=1023 loops=1)\n                            -> Table scan on ai  (cost=1.21 rows=540408) (actual time=0.691..39.9 rows=540791 loops=1)\n                            -> Hash\n                                -> Filter: ((a.start_date <= <cache>((@today))) and (a.end_date >= <cache>((@today))))  (cost=2540 rows=296) (actual time=0.0432..2.62 rows=661 loops=1)\n                                    -> Index lookup on a using fk_award_inst (inst_id = (@inst_id))  (cost=2540 rows=2665) (actual time=0.0413..2.37 rows=2665 loops=1)\n"
+}

@@ -1,0 +1,98 @@
+{
+  "experiment": "E6",
+  "config": "fulltext",
+  "when": "2026-11-11T15:47:59",
+  "query": "SELECT f.fiscal_year, g.code AS agency, COUNT(DISTINCT a.award_id) AS awards, SUM(f.amount) AS funding\nFROM award a\nJOIN award_funding f ON f.award_id = a.award_id\nJOIN agency g        ON g.agency_id = a.agency_id\nWHERE MATCH(a.title, a.abstract) AGAINST (CONCAT('\"', @topic, '\"') IN BOOLEAN MODE)\n  AND f.fiscal_year BETWEEN 2016 AND 2026\nGROUP BY f.fiscal_year, g.code\nORDER BY f.fiscal_year, g.code",
+  "indexes_added": [
+    "ft_award_text"
+  ],
+  "index_build_ms": {
+    "ft_award_text": 151477
+  },
+  "session_settings": [],
+  "server": {
+    "innodb_buffer_pool_size": "134217728",
+    "innodb_ft_min_token_size": "3",
+    "join_buffer_size": "262144",
+    "sort_buffer_size": "262144",
+    "tmp_table_size": "16777216",
+    "version": "9.7.4"
+  },
+  "show_index": {
+    "award": [
+      [
+        "award",
+        "0",
+        "PRIMARY",
+        "1",
+        "award_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "1",
+        "agency_id"
+      ],
+      [
+        "award",
+        "0",
+        "uq_award_source",
+        "2",
+        "source_award_no"
+      ],
+      [
+        "award",
+        "1",
+        "fk_award_inst",
+        "1",
+        "inst_id"
+      ],
+      [
+        "award",
+        "1",
+        "ft_award_text",
+        "1",
+        "title"
+      ],
+      [
+        "award",
+        "1",
+        "ft_award_text",
+        "2",
+        "abstract"
+      ]
+    ]
+  },
+  "explain_tree": "-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)\n    -> Sort: f.fiscal_year, g.`code`\n        -> Stream results  (cost=4.42 rows=0.24)\n            -> Nested loop inner join  (cost=4.42 rows=0.24)\n                -> Nested loop inner join  (cost=2.2 rows=1)\n                    -> Filter: (match a.title,a.abstract against (concat('\"',(@topic),'\"') in boolean mode))  (cost=1.1 rows=1)\n                        -> Full-text index search on a using ft_award_text (title = concat('\"',(@topic),'\"'))  (cost=1.1 rows=1)\n                    -> Single-row index lookup on g using PRIMARY (agency_id = a.agency_id)  (cost=1.1 rows=1)\n                -> Filter: (f.fiscal_year between 2016 and 2026)  (cost=2.02 rows=0.24)\n                    -> Index lookup on f using PRIMARY (award_id = a.award_id)  (cost=2.02 rows=2.16)\n",
+  "rows_returned": 21,
+  "times_ms": [
+    275.97,
+    275.59,
+    279.34,
+    280.74,
+    277.57
+  ],
+  "median_ms": 277.57,
+  "min_ms": 275.59,
+  "max_ms": 280.74,
+  "session_counters": {
+    "Created_tmp_disk_tables": 0,
+    "Created_tmp_tables": 2,
+    "Handler_read_first": 0,
+    "Handler_read_key": 19541,
+    "Handler_read_last": 0,
+    "Handler_read_next": 36551,
+    "Handler_read_prev": 0,
+    "Handler_read_rnd": 0,
+    "Handler_read_rnd_next": 0,
+    "Select_full_join": 0,
+    "Select_range": 0,
+    "Select_scan": 0,
+    "Sort_merge_passes": 1,
+    "Sort_range": 0,
+    "Sort_rows": 35168,
+    "Sort_scan": 1
+  },
+  "explain_analyze": "-> Group aggregate: count(distinct award.award_id), sum(award_funding.amount)  (actual time=157..162 rows=21 loops=1)\n    -> Sort: f.fiscal_year, g.`code`  (actual time=157..157 rows=35168 loops=1)\n        -> Stream results  (cost=4.26 rows=0.24) (actual time=2.2..151 rows=35168 loops=1)\n            -> Nested loop inner join  (cost=4.26 rows=0.24) (actual time=2.2..148 rows=35168 loops=1)\n                -> Nested loop inner join  (cost=2.2 rows=1) (actual time=2.18..107 rows=19386 loops=1)\n                    -> Filter: (match a.title,a.abstract against (concat('\"',(@topic),'\"') in boolean mode))  (cost=1.1 rows=1) (actual time=2.17..104 rows=19386 loops=1)\n                        -> Full-text index search on a using ft_award_text (title = concat('\"',(@topic),'\"'))  (cost=1.1 rows=1) (actual time=2.16..103 rows=19386 loops=1)\n                    -> Single-row index lookup on g using PRIMARY (agency_id = a.agency_id)  (cost=1.1 rows=1) (actual time=49e-6..64.3e-6 rows=1 loops=19386)\n                -> Filter: (f.fiscal_year between 2016 and 2026)  (cost=1.87 rows=0.24) (actual time=0.00179..0.002 rows=1.81 loops=19386)\n                    -> Index lookup on f using PRIMARY (award_id = a.award_id)  (cost=1.87 rows=2.16) (actual time=0.00171..0.00186 rows=1.89 loops=19386)\n"
+}

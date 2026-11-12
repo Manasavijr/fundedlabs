@@ -183,6 +183,12 @@ input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
 .mring{width:12px;height:12px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*360deg),var(--line) 0)}
 .decl{border:1px solid var(--line);background:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:var(--muted)}
 .decl:hover{border-color:var(--warm);color:var(--warm)}
+.trail .acts{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.mail{border:1px solid var(--line);background:none;border-radius:8px;width:30px;height:26px;display:grid;place-items:center;color:var(--muted);padding:0}
+.mail:hover{border-color:var(--accent);color:var(--accent)}
+.ctarow{display:grid;grid-template-columns:1fr auto;gap:10px}
+.cta.alt{background:none;border:1px solid var(--line);color:var(--ink,inherit);padding:0 18px}
+.cta.alt:hover{border-color:var(--accent);color:var(--accent)}
 @media (max-width:900px){.trail{grid-template-columns:minmax(0,1fr) auto}.steps{grid-column:1/-1;grid-row:2}.nxt{grid-column:1/2}}
 @media (max-width:640px){.lhead,.row{grid-template-columns:40px minmax(0,1fr) 70px}.yrs,.lhead span:nth-child(3){display:none}}
 

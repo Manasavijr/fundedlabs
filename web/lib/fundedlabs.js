@@ -21,6 +21,18 @@ const title = s => String(s ?? '').toLowerCase().replace(/(^|[\s\-/(])([a-z])/g,
 const person = s => { s = String(s ?? ''); if(s.includes(',')){ const [l, f] = s.split(','); s = f.trim() + ' ' + l.trim(); } return s === s.toUpperCase() ? title(s) : s; };
 const initials = n => person(n).split(/\s+/).filter(Boolean).map(w => w[0]).slice(0,2).join('').toUpperCase();
 const inst = n => { const t = title(n); return t.length > 34 ? t.replace('University of California', 'UC').replace('University', 'U.') : t; };
+/* Draft email: opens the student's own mail app with a prefilled note. Nothing is sent from here,
+   and the data has no email addresses, so the To: line stays empty for the student to fill in. */
+function draftEmail(fullName, institution, award){
+  const name = person(fullName), last = name.split(' ').pop();
+  const t = award && award.title ? title(String(award.title).toLowerCase()).replace(/^./, c => c.toUpperCase()) : '';
+  const subject = t ? `Student interested in your research on ${t}` : `Student interested in research in your lab`;
+  const body = [`Dear Professor ${last},`, '',
+    `I am a student at [your university] and came across ${t ? `your ${award.agency || ''} award "${t}"`.replace('  ', ' ') : 'your current funded research'}${institution ? ` at ${inst(institution)}` : ''}. I would love to learn whether there is a way for me to contribute to your lab.`, '',
+    '[One or two sentences about your background and relevant skills.]', '',
+    'Thank you for your time.', '', 'Best regards,', '[Your name]'].join('\n');
+  location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
 
 async function api(path, opts){
   const r = await fetch(API + '/api' + path, opts);
@@ -207,7 +219,7 @@ async function openDrawer(id){
    <div class="dhead"><div class="avatar">${initials(v.full_name)}</div><div><h2 id="dName">${esc(person(v.full_name))}</h2><p>${esc(inst(v.institution || ''))}${dept ? ' · ' + esc(title(dept)) : ''}</p></div>
    <button class="iconbtn dclose" id="dClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
    <div class="stats"><div class="stat"><b id="sF">$0</b><span>active as PI</span></div><div class="stat"><b id="sA">0</b><span>active awards</span></div><div class="stat"><b>${through ? shortM(through) : 'None'}</b><span>funded through</span></div></div>
-   <button class="cta ${inO?'done':''}" id="addO">${inO ? 'In your outreach list' : 'Add to outreach'}</button>
+   <div class="ctarow"><button class="cta ${inO?'done':''}" id="addO">${inO ? 'In your outreach list' : 'Add to outreach'}</button><button class="cta alt" id="draftE" type="button">Draft email</button></div>
    <div class="sec"><h3>Funding by fiscal year <small>award_funding · as PI</small></h3>
      <div class="fy">${Object.entries(fy).map(([y,val]) => `<div class="${Number(y)===Math.floor(TODAY/12)?'cur':''}" title="FY${y}: ${money(val)}"><i data-h="${val/maxF*100}"></i></div>`).join('')}</div>
      <div class="fyl">${Object.keys(fy).map(y => `<span>${String(y).slice(2)}</span>`).join('')}</div></div>
@@ -227,6 +239,7 @@ async function openDrawer(id){
   if(coL.length) drawOrbit(v.full_name, coL);
   const best = led.sort((a,b) => mi(b.end_date) - mi(a.end_date))[0] || act[0] || awards[0];
   $('#addO').onclick = e => addOutreach(v.inv_id, person(v.full_name), best ? best.award_id : null, e.currentTarget);
+  $('#draftE').onclick = () => draftEmail(v.full_name, v.institution, best);
 }
 async function openAward(id){
   try{ const r = await api(`/awards/${id}`); const pi = r.people.rows.find(p => p.role === 'PI') || r.people.rows[0]; if(pi) openDrawer(pi.inv_id); else showToast('AWARD', r.award.title); }catch(e){ fail(e); }
@@ -278,6 +291,7 @@ function renderBoard(moved){
     if(o.outreach_id === S.fresh || o.outreach_id === moved){ row.classList.add('pop'); S.fresh = null; }
     $$('.step', row).forEach(b => b.addEventListener('click', () => moveCard(o, b.dataset.st)));
     const x = $('.decl', row); if(x) x.addEventListener('click', () => moveCard(o, o.status === 'declined' ? 'to_contact' : 'declined'));
+    $('.mail', row).addEventListener('click', () => draftEmail(o.full_name, o.institution, null));
     $('.who', row).addEventListener('click', () => openDrawer(o.inv_id)); });
 }
 async function renderSuggest(){
@@ -303,7 +317,8 @@ function trailHTML(o){
     </div>
     <div class="nxt">${dec ? '<span class="tagd">Declined</span>' : due ? `<span class="fu">Follow up was due ${MON[mi(o.follow_up_on)%12]} ${Number(String(o.follow_up_on).slice(8,10))}</span>` : `<span class="na">${NEXT[o.status]}${o.follow_up_on && o.status !== 'to_contact' ? ' by ' + MON[mi(o.follow_up_on)%12] + ' ' + Number(String(o.follow_up_on).slice(8,10)) : ''}</span>`}
       <span class="fund"><span class="mring" style="--p:${Math.min(1, (Number(o.active_awards)||0)/3)}"></span>${Number(o.active_awards) ? o.active_awards + ' active · ' + money(o.active_award_total) : 'no active awards'}</span></div>
-    <button class="decl" type="button" aria-label="${dec ? 'Reopen' : 'Mark declined'}">${dec ? 'Reopen' : 'Declined'}</button>
+    <span class="acts"><button class="mail" type="button" aria-label="Draft email to ${esc(person(o.full_name))}" title="Draft email"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v12H4z"></path><path d="m4 7 8 6 8-6"></path></svg></button>
+    <button class="decl" type="button" aria-label="${dec ? 'Reopen' : 'Mark declined'}">${dec ? 'Reopen' : 'Declined'}</button></span>
   </article>`;
 }
 async function moveCard(o, st){
